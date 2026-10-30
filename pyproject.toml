@@ -1,0 +1,10 @@
+[project]
+name = "media-tool"
+version = "1.0.0"
+description = "Local desktop media toolbox"
+license = "GPL-3.0-or-later"
+requires-python = ">=3.13,<3.14"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

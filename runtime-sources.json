@@ -1,0 +1,215 @@
+{
+  "application": "Media Tool",
+  "version": "1.0.0",
+  "repository": "https://github.com/alphaq0099/media-tool",
+  "python": {
+    "version": "3.13.3",
+    "source": "https://www.python.org/ftp/python/3.13.3/Python-3.13.3.tgz"
+  },
+  "qt": {
+    "version": "6.10.2",
+    "source_directory": "https://download.qt.io/official_releases/qt/6.10/6.10.2/submodules/",
+    "modules": [
+      "qtbase",
+      "qtsvg",
+      "qtimageformats"
+    ]
+  },
+  "packages": [
+    {
+      "name": "PySide6-Essentials",
+      "version": "6.10.2",
+      "license": "LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only",
+      "sources": [],
+      "project_urls": [
+        "Homepage, https://pyside.org",
+        "Documentation, https://doc.qt.io/qtforpython",
+        "Repository, https://code.qt.io/cgit/pyside/pyside-setup.git/",
+        "Changelog, https://code.qt.io/cgit/pyside/pyside-setup.git/tree/doc/changelogs",
+        "Tracker, https://bugreports.qt.io/projects/PYSIDE"
+      ],
+      "metadata_url": "https://pypi.org/pypi/PySide6-Essentials/6.10.2/json"
+    },
+    {
+      "name": "shiboken6",
+      "version": "6.10.2",
+      "license": "LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only",
+      "sources": [],
+      "project_urls": [
+        "Homepage, https://pyside.org",
+        "Documentation, https://doc.qt.io/qtforpython",
+        "Repository, https://code.qt.io/cgit/pyside/pyside-setup.git/",
+        "Changelog, https://code.qt.io/cgit/pyside/pyside-setup.git/tree/doc/changelogs",
+        "Tracker, https://bugreports.qt.io/projects/PYSIDE"
+      ],
+      "metadata_url": "https://pypi.org/pypi/shiboken6/6.10.2/json"
+    },
+    {
+      "name": "Pillow",
+      "version": "12.1.1",
+      "license": "MIT-CMU",
+      "sources": [
+        {
+          "filename": "pillow-12.1.1.tar.gz",
+          "url": "https://files.pythonhosted.org/packages/1f/42/5c74462b4fd957fcd7b13b04fb3205ff8349236ea74c7c375766d6c82288/pillow-12.1.1.tar.gz",
+          "sha256": "9ad8fa5937ab05218e2b6a4cff30295ad35afd2f83ac592e68c0d871bb0fdbc4"
+        }
+      ],
+      "project_urls": [
+        "Changelog, https://github.com/python-pillow/Pillow/releases",
+        "Documentation, https://pillow.readthedocs.io",
+        "Funding, https://tidelift.com/subscription/pkg/pypi-pillow?utm_source=pypi-pillow&utm_medium=pypi",
+        "Homepage, https://python-pillow.github.io",
+        "Mastodon, https://fosstodon.org/@pillow",
+        "Release notes, https://pillow.readthedocs.io/en/stable/releasenotes/index.html",
+        "Source, https://github.com/python-pillow/Pillow"
+      ],
+      "metadata_url": "https://pypi.org/pypi/Pillow/12.1.1/json"
+    },
+    {
+      "name": "mutagen",
+      "version": "1.48.1",
+      "license": "GPL-2.0-or-later",
+      "sources": [
+        {
+          "filename": "mutagen-1.48.1.tar.gz",
+          "url": "https://files.pythonhosted.org/packages/df/70/1675da133ea92227da41bf5b24e1c66be597ff736a1533ade41da986852f/mutagen-1.48.1.tar.gz",
+          "sha256": "8f95637ab9f6f305cec6bd1294e197debe207998e3e068596563c74f86b0a173"
+        }
+      ],
+      "project_urls": [
+        "Homepage, https://mutagen.readthedocs.io",
+        "Repository, https://github.com/quodlibet/mutagen"
+      ],
+      "metadata_url": "https://pypi.org/pypi/mutagen/1.48.1/json"
+    },
+    {
+      "name": "pypdf",
+      "version": "6.21.2",
+      "license": "BSD-3-Clause",
+      "sources": [
+        {
+          "filename": "pypdf-6.21.2.tar.gz",
+          "url": "https://files.pythonhosted.org/packages/06/28/081f1cbcca7042441dafc8de00f48ba60853f89e5bff92c5f26477346d81/pypdf-6.21.2.tar.gz",
+          "sha256": "0a3e1c5c886a1be03646c16a04827cc166c2a0575c971b26a4bf89686551c2d4"
+        }
+      ],
+      "project_urls": [
+        "Bug Reports, https://github.com/py-pdf/pypdf/issues",
+        "Changelog, https://pypdf.readthedocs.io/en/latest/meta/CHANGELOG.html",
+        "Documentation, https://pypdf.readthedocs.io/en/latest/",
+        "Source, https://github.com/py-pdf/pypdf"
+      ],
+      "metadata_url": "https://pypi.org/pypi/pypdf/6.21.2/json"
+    },
+    {
+      "name": "pypdfium2",
+      "version": "5.14.0",
+      "license": "BSD-3-Clause, Apache-2.0, dependency licenses",
+      "sources": [
+        {
+          "filename": "pypdfium2-5.14.0.tar.gz",
+          "url": "https://files.pythonhosted.org/packages/95/d0/c81d3a7c2a9af37b817ace1de0acd40cf44d15f12407c5e86b3668364a5c/pypdfium2-5.14.0.tar.gz",
+          "sha256": "c5f009b3157f10e97dceb55963f5910eff92feb00587ba10a76f12b87ce1a4b6"
+        }
+      ],
+      "project_urls": [
+        "Source, https://github.com/pypdfium2-team/pypdfium2",
+        "Tracker, https://github.com/pypdfium2-team/pypdfium2/issues",
+        "Documentation, https://pypdfium2.readthedocs.io",
+        "Changelog, https://pypdfium2.readthedocs.io/en/stable/changelog.html"
+      ],
+      "metadata_url": "https://pypi.org/pypi/pypdfium2/5.14.0/json"
+    },
+    {
+      "name": "cryptography",
+      "version": "50.0.2",
+      "license": "Apache-2.0 OR BSD-3-Clause",
+      "sources": [
+        {
+          "filename": "cryptography-50.0.2.tar.gz",
+          "url": "https://files.pythonhosted.org/packages/9d/af/182eb91b0df3fe75c4d9f26fe70684569566745f6ba7e5c9c73a862c5252/cryptography-50.0.2.tar.gz",
+          "sha256": "7b46165bb56eb4704e2eaaf86f3c940d19154535d9b0ca7d6d590b04060e00d5"
+        }
+      ],
+      "project_urls": [
+        "changelog, https://cryptography.io/en/latest/changelog/",
+        "documentation, https://cryptography.io/",
+        "homepage, https://github.com/pyca/cryptography",
+        "issues, https://github.com/pyca/cryptography/issues",
+        "source, https://github.com/pyca/cryptography/"
+      ],
+      "metadata_url": "https://pypi.org/pypi/cryptography/50.0.2/json"
+    },
+    {
+      "name": "cffi",
+      "version": "2.1.1",
+      "license": "MIT-0",
+      "sources": [
+        {
+          "filename": "cffi-2.1.1.tar.gz",
+          "url": "https://files.pythonhosted.org/packages/9e/ef/008a1939e372c06329a3fce4279c02f328488f3526744906eeec3da7ad5f/cffi-2.1.1.tar.gz",
+          "sha256": "dd31f52ea1086513bb9df30f8fcee9b8918323ae067a3d5b78bc826a000712be"
+        }
+      ],
+      "project_urls": [
+        "Documentation, https://cffi.readthedocs.io/",
+        "Changelog, https://cffi.readthedocs.io/en/latest/whatsnew.html",
+        "Download, https://github.com/python-cffi/cffi/releases",
+        "Contact, https://groups.google.com/forum/#!forum/python-cffi",
+        "Source Code, https://github.com/python-cffi/cffi",
+        "Issue Tracker, https://github.com/python-cffi/cffi/issues"
+      ],
+      "metadata_url": "https://pypi.org/pypi/cffi/2.1.1/json"
+    },
+    {
+      "name": "pycparser",
+      "version": "3.12",
+      "license": "BSD-3-Clause",
+      "sources": [
+        {
+          "filename": "pycparser-3.12.tar.gz",
+          "url": "https://files.pythonhosted.org/packages/cb/27/eeb9f307bf07060f3d9f9aa0fb8c15b01bdfded0a941e4b2719c7f94cacd/pycparser-3.12.tar.gz",
+          "sha256": "f03387877eab82ce01bbdfd0ba7252ee55a90b1c708d5129e2ce915475cf1db6"
+        }
+      ],
+      "project_urls": [
+        "Homepage, https://github.com/eliben/pycparser"
+      ],
+      "metadata_url": "https://pypi.org/pypi/pycparser/3.12/json"
+    },
+    {
+      "name": "pyinstaller",
+      "version": "6.19.0",
+      "license": "GPLv2-or-later with a special exception which allows to use PyInstaller to build and distribute non-free programs (including commercial ones)",
+      "sources": [
+        {
+          "filename": "pyinstaller-6.19.0.tar.gz",
+          "url": "https://files.pythonhosted.org/packages/c8/63/fd62472b6371d89dc138d40c36d87a50dc2de18a035803bbdc376b4ffac4/pyinstaller-6.19.0.tar.gz",
+          "sha256": "ec73aeb8bd9b7f2f1240d328a4542e90b3c6e6fbc106014778431c616592a865"
+        }
+      ],
+      "project_urls": [
+        "Homepage, https://pyinstaller.org",
+        "Documentation, https://pyinstaller.org",
+        "Source Code, https://github.com/pyinstaller/pyinstaller",
+        "Release Notes, https://pyinstaller.org/en/stable/CHANGES.html"
+      ],
+      "metadata_url": "https://pypi.org/pypi/pyinstaller/6.19.0/json"
+    }
+  ],
+  "native_builds": {
+    "python_openssl": "OpenSSL 3.0.16 11 Feb 2025",
+    "cryptography_openssl": "OpenSSL 4.0.3 29 Sep 2026",
+    "pdfium": {
+      "major": 156,
+      "minor": 0,
+      "build": 8076,
+      "patch": 0,
+      "n_commits": 0,
+      "hash": null,
+      "origin": "pdfium-binaries",
+      "flags": []
+    }
+  }
+}

@@ -1,0 +1,20 @@
+.venv/
+__pycache__/
+.pytest_cache/
+build/
+dist/
+artifacts/
+*.pyc
+
+# Internal plans, design drafts and development evidence stay local.
+/idea.txt
+/prototypes/
+/*.png
+/.agents/
+/.codex/
+/docs/*
+!/docs/user-guide.md
+!/docs/portable-readme.txt
+!/docs/screenshots/
+/docs/screenshots/*
+!/docs/screenshots/workspace-dark.png

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security reporting
+    url: https://github.com/alphaq0099/media-tool/blob/main/SECURITY.md
+    about: Read the policy before disclosing a security problem.

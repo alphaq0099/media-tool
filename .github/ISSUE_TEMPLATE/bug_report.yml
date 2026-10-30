@@ -1,0 +1,40 @@
+name: Bug report
+description: Report a reproducible Media Tool problem.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: "For security problems, read SECURITY.md. Do not include private files, passwords or unreviewed detailed job reports."
+  - type: input
+    id: version
+    attributes:
+      label: Media Tool version
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Operating system
+      placeholder: "Windows 10 x64"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the tool/task and relevant settings, using a disposable input where possible.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Optional support report
+      description: Queue → History → Tools → Export support report. Review before sharing; describe error text separately after removing private information.
+      render: json

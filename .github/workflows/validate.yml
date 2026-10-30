@@ -1,0 +1,206 @@
+name: Validate Media Tool
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  test-package:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Linux Qt libraries
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y binutils libegl1 libopengl0 libxkbcommon0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 libxkbcommon-x11-0 xvfb ffmpeg
+      - name: Windows FFmpeg
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install ffmpeg --yes --no-progress
+          $binary = Get-ChildItem "$env:ChocolateyInstall\lib\ffmpeg\tools" -Filter ffmpeg.exe -Recurse | Select-Object -First 1
+          if (!$binary) { throw 'FFmpeg binary not found' }
+          $binary.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m pytest -q
+        env:
+          QT_QPA_PLATFORM: offscreen
+      - run: python -m PyInstaller --noconfirm MediaTool.spec
+      - name: Windows package smoke
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist/MediaTool/MediaTool.exe -ArgumentList '--screenshot artifacts/package.png --sample-rows 10000 --settings-file artifacts/ci.ini' -WindowStyle Hidden -PassThru -Wait
+          if ($p.ExitCode -ne 0 -or !(Test-Path artifacts/package.png)) { throw 'Packaged startup failed' }
+      - name: Windows packaged queue check
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist/MediaTool/MediaTool.exe -ArgumentList '--queue-check artifacts/queue-check.json --settings-file artifacts/ci-queue.ini --exit-after-ms 30000' -WindowStyle Hidden -PassThru -Wait
+          if ($p.ExitCode -ne 0 -or !(Test-Path artifacts/queue-check.json)) { throw 'Packaged queue check did not finish' }
+          if (!(Get-Content artifacts/queue-check.json -Raw | ConvertFrom-Json).passed) { throw 'Packaged queue check failed' }
+      - name: Windows packaged rename check
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist/MediaTool/MediaTool.exe -ArgumentList '--rename-check artifacts/rename-check.json --settings-file artifacts/ci-rename.ini --exit-after-ms 40000' -WindowStyle Hidden -PassThru -Wait
+          if ($p.ExitCode -ne 0 -or !(Test-Path artifacts/rename-check.json)) { throw 'Packaged rename check did not finish' }
+          if ((Get-Content artifacts/rename-check.json -Raw | ConvertFrom-Json).passed -ne $true) { throw 'Packaged rename check failed' }
+      - name: Windows packaged undo check
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist/MediaTool/MediaTool.exe -ArgumentList '--undo-check artifacts/undo-check.json --settings-file artifacts/ci-undo.ini --exit-after-ms 70000' -WindowStyle Hidden -PassThru -Wait
+          if ($p.ExitCode -ne 0 -or !(Test-Path artifacts/undo-check.json)) { throw 'Packaged undo check did not finish' }
+          if ((Get-Content artifacts/undo-check.json -Raw | ConvertFrom-Json).passed -ne $true) { throw 'Packaged undo check failed' }
+      - name: Linux package smoke
+        if: runner.os == 'Linux'
+        run: xvfb-run -a dist/MediaTool/MediaTool --screenshot artifacts/package.png --sample-rows 10000 --settings-file artifacts/ci.ini
+      - name: Windows packaged image check
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist/MediaTool/MediaTool.exe -ArgumentList '--image-check artifacts/image-check.json --settings-file artifacts/ci-image.ini --exit-after-ms 65000' -WindowStyle Hidden -PassThru -Wait
+          if ($p.ExitCode -ne 0 -or !(Test-Path artifacts/image-check.json)) { throw 'Packaged image check did not finish' }
+          if ((Get-Content artifacts/image-check.json -Raw | ConvertFrom-Json).passed -ne $true) { throw 'Packaged image check failed' }
+      - name: Linux packaged image check
+        if: runner.os == 'Linux'
+        run: |
+          xvfb-run -a dist/MediaTool/MediaTool --image-check artifacts/image-check.json --settings-file artifacts/ci-image.ini --exit-after-ms 65000
+          python -c "import json; from pathlib import Path; assert json.loads(Path('artifacts/image-check.json').read_text())['passed']"
+      - name: Linux packaged queue check
+        if: runner.os == 'Linux'
+        run: |
+          xvfb-run -a dist/MediaTool/MediaTool --queue-check artifacts/queue-check.json --settings-file artifacts/ci-queue.ini --exit-after-ms 30000
+          python -c "import json; from pathlib import Path; assert json.loads(Path('artifacts/queue-check.json').read_text())['passed']"
+      - name: Linux packaged rename check
+        if: runner.os == 'Linux'
+        run: |
+          xvfb-run -a dist/MediaTool/MediaTool --rename-check artifacts/rename-check.json --settings-file artifacts/ci-rename.ini --exit-after-ms 40000
+          python -c "import json; from pathlib import Path; assert json.loads(Path('artifacts/rename-check.json').read_text())['passed']"
+      - name: Linux packaged undo check
+        if: runner.os == 'Linux'
+        run: |
+          xvfb-run -a dist/MediaTool/MediaTool --undo-check artifacts/undo-check.json --settings-file artifacts/ci-undo.ini --exit-after-ms 70000
+          python -c "import json; from pathlib import Path; assert json.loads(Path('artifacts/undo-check.json').read_text())['passed']"
+      - name: Windows packaged resize check
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist/MediaTool/MediaTool.exe -ArgumentList '--resize-check artifacts/resize-check.json --settings-file artifacts/ci-resize.ini --exit-after-ms 65000' -WindowStyle Hidden -PassThru -Wait
+          if ($p.ExitCode -ne 0 -or !(Test-Path artifacts/resize-check.json)) { throw 'Packaged resize check did not finish' }
+          if ((Get-Content artifacts/resize-check.json -Raw | ConvertFrom-Json).passed -ne $true) { throw 'Packaged resize check failed' }
+      - name: Linux packaged resize check
+        if: runner.os == 'Linux'
+        run: |
+          xvfb-run -a dist/MediaTool/MediaTool --resize-check artifacts/resize-check.json --settings-file artifacts/ci-resize.ini --exit-after-ms 65000
+          python -c "import json; from pathlib import Path; assert json.loads(Path('artifacts/resize-check.json').read_text())['passed']"
+      - name: Windows packaged video check
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist/MediaTool/MediaTool.exe -ArgumentList '--video-check artifacts/video-check.json --settings-file artifacts/ci-video.ini --exit-after-ms 110000' -WindowStyle Hidden -PassThru -Wait
+          if ($p.ExitCode -ne 0 -or !(Test-Path artifacts/video-check.json)) { throw 'Packaged video check did not finish' }
+          if ((Get-Content artifacts/video-check.json -Raw | ConvertFrom-Json).passed -ne $true) { throw 'Packaged video check failed' }
+      - name: Linux packaged video check
+        if: runner.os == 'Linux'
+        run: |
+          xvfb-run -a dist/MediaTool/MediaTool --video-check artifacts/video-check.json --settings-file artifacts/ci-video.ini --exit-after-ms 110000
+          python -c "import json; from pathlib import Path; assert json.loads(Path('artifacts/video-check.json').read_text())['passed']"
+      - name: Windows packaged compression check
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist/MediaTool/MediaTool.exe -ArgumentList '--compress-check artifacts/compress-check.json --settings-file artifacts/ci-compress.ini --exit-after-ms 110000' -WindowStyle Hidden -PassThru -Wait
+          if ($p.ExitCode -ne 0 -or !(Test-Path artifacts/compress-check.json)) { throw 'Packaged compression check did not finish' }
+          if ((Get-Content artifacts/compress-check.json -Raw | ConvertFrom-Json).passed -ne $true) { throw 'Packaged compression check failed' }
+      - name: Linux packaged compression check
+        if: runner.os == 'Linux'
+        run: |
+          xvfb-run -a dist/MediaTool/MediaTool --compress-check artifacts/compress-check.json --settings-file artifacts/ci-compress.ini --exit-after-ms 110000
+          python -c "import json; from pathlib import Path; assert json.loads(Path('artifacts/compress-check.json').read_text())['passed']"
+      - name: Windows packaged format check
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist/MediaTool/MediaTool.exe -ArgumentList '--format-check artifacts/format-check.json --settings-file artifacts/ci-format.ini --exit-after-ms 110000' -WindowStyle Hidden -PassThru -Wait
+          if ($p.ExitCode -ne 0 -or !(Test-Path artifacts/format-check.json)) { throw 'Packaged format check did not finish' }
+          if ((Get-Content artifacts/format-check.json -Raw | ConvertFrom-Json).passed -ne $true) { throw 'Packaged format check failed' }
+      - name: Linux packaged format check
+        if: runner.os == 'Linux'
+        run: |
+          xvfb-run -a dist/MediaTool/MediaTool --format-check artifacts/format-check.json --settings-file artifacts/ci-format.ini --exit-after-ms 110000
+          python -c "import json; from pathlib import Path; assert json.loads(Path('artifacts/format-check.json').read_text())['passed']"
+      - name: Windows packaged WebM check
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist/MediaTool/MediaTool.exe -ArgumentList '--webm-check artifacts/webm-check.json --settings-file artifacts/ci-webm.ini --exit-after-ms 110000' -WindowStyle Hidden -PassThru -Wait
+          if ($p.ExitCode -ne 0 -or !(Test-Path artifacts/webm-check.json)) { throw 'Packaged WebM check did not finish' }
+          if ((Get-Content artifacts/webm-check.json -Raw | ConvertFrom-Json).passed -ne $true) { throw 'Packaged WebM check failed' }
+      - name: Linux packaged WebM check
+        if: runner.os == 'Linux'
+        run: |
+          xvfb-run -a dist/MediaTool/MediaTool --webm-check artifacts/webm-check.json --settings-file artifacts/ci-webm.ini --exit-after-ms 110000
+          python -c "import json; from pathlib import Path; assert json.loads(Path('artifacts/webm-check.json').read_text())['passed']"
+      - name: Windows packaged track selection check
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist/MediaTool/MediaTool.exe -ArgumentList '--tracks-check artifacts/tracks-check.json --settings-file artifacts/ci-tracks.ini --exit-after-ms 110000' -WindowStyle Hidden -PassThru -Wait
+          if ($p.ExitCode -ne 0 -or !(Test-Path artifacts/tracks-check.json)) { throw 'Packaged track check did not finish' }
+          if ((Get-Content artifacts/tracks-check.json -Raw | ConvertFrom-Json).passed -ne $true) { throw 'Packaged track check failed' }
+      - name: Linux packaged track selection check
+        if: runner.os == 'Linux'
+        run: |
+          xvfb-run -a dist/MediaTool/MediaTool --tracks-check artifacts/tracks-check.json --settings-file artifacts/ci-tracks.ini --exit-after-ms 110000
+          python -c "import json; from pathlib import Path; assert json.loads(Path('artifacts/tracks-check.json').read_text())['passed']"
+      - name: Windows packaged remux check
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist/MediaTool/MediaTool.exe -ArgumentList '--remux-check artifacts/remux-check.json --settings-file artifacts/ci-remux.ini --exit-after-ms 110000' -WindowStyle Hidden -PassThru -Wait
+          if ($p.ExitCode -ne 0 -or !(Test-Path artifacts/remux-check.json)) { throw 'Packaged remux check did not finish' }
+          if ((Get-Content artifacts/remux-check.json -Raw | ConvertFrom-Json).passed -ne $true) { throw 'Packaged remux check failed' }
+      - name: Linux packaged remux check
+        if: runner.os == 'Linux'
+        run: |
+          xvfb-run -a dist/MediaTool/MediaTool --remux-check artifacts/remux-check.json --settings-file artifacts/ci-remux.ini --exit-after-ms 110000
+          python -c "import json; from pathlib import Path; assert json.loads(Path('artifacts/remux-check.json').read_text())['passed']"
+      - name: Windows packaged H.265 target-size check
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist/MediaTool/MediaTool.exe -ArgumentList '--hevc-size-check artifacts/hevc-size-check.json --settings-file artifacts/ci-hevc-size.ini --exit-after-ms 110000' -WindowStyle Hidden -PassThru -Wait
+          if ($p.ExitCode -ne 0 -or !(Test-Path artifacts/hevc-size-check.json)) { throw 'Packaged H.265 size check did not finish' }
+          if ((Get-Content artifacts/hevc-size-check.json -Raw | ConvertFrom-Json).passed -ne $true) { throw 'Packaged H.265 size check failed' }
+      - name: Linux packaged H.265 target-size check
+        if: runner.os == 'Linux'
+        run: |
+          xvfb-run -a dist/MediaTool/MediaTool --hevc-size-check artifacts/hevc-size-check.json --settings-file artifacts/ci-hevc-size.ini --exit-after-ms 110000
+          python -c "import json; from pathlib import Path; assert json.loads(Path('artifacts/hevc-size-check.json').read_text())['passed']"
+      - name: Windows packaged ZIP check
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist/MediaTool/MediaTool.exe -ArgumentList '--archive-check artifacts/archive-check.json --settings-file artifacts/ci-archive.ini --exit-after-ms 110000' -WindowStyle Hidden -PassThru -Wait
+          if ($p.ExitCode -ne 0 -or !(Test-Path artifacts/archive-check.json)) { throw 'Packaged ZIP check did not finish' }
+          if ((Get-Content artifacts/archive-check.json -Raw | ConvertFrom-Json).passed -ne $true) { throw 'Packaged ZIP check failed' }
+      - name: Linux packaged ZIP check
+        if: runner.os == 'Linux'
+        run: |
+          xvfb-run -a dist/MediaTool/MediaTool --archive-check artifacts/archive-check.json --settings-file artifacts/ci-archive.ini --exit-after-ms 110000
+          python -c "import json; from pathlib import Path; assert json.loads(Path('artifacts/archive-check.json').read_text())['passed']"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MediaTool-${{ matrix.os }}
+          path: |
+            dist/MediaTool/
+            artifacts/*.json
+            artifacts/*.xml
+            artifacts/*.png
+          retention-days: 7
