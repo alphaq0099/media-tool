@@ -151,8 +151,33 @@ def test_unknown_duration_uses_indeterminate_progress(tmp_path, media_tools, mon
     assert "Duration unknown" in preview.items[0].reason
     seen = []
     items = run_plan(tmp_path, preview, progress=lambda item, done, total: seen.append(total))
-    assert items[0]["state"] == "succeeded", items
+    assert items[0]["state"] == "succeeded", items[0]["message"]
     assert 0 in seen
+
+
+@pytest.mark.parametrize('durations', [True, False])
+def test_packet_span_handles_reordered_timestamps_without_guessing_last_frame(monkeypatch, durations):
+    import media_tool.video as video
+    def packets(*args, on_line, **kwargs):
+        for pts in (0, .3, .1, .2):
+            on_line(f'stream_index=0|pts_time={pts}|duration_time={"0.1" if durations else "N/A"}')
+        return ''
+    monkeypatch.setattr(video, 'run_process', packets)
+    result=video.packet_durations('synthetic.mp4', {'streams':[{'index':0,'codec_type':'video','duration':None}]}, {'ffprobe':'ffprobe'}, lambda:False)
+    assert result['streams'][0]['duration']==pytest.approx(.4 if durations else .3)
+    assert result['streams'][0]['duration_basis']==('packet_end' if durations else 'presentation_span_lower_bound')
+
+
+@pytest.mark.parametrize('diagnostic', ['', 'File ended prematurely'])
+def test_missing_packet_duration_does_not_bypass_unverifiable_or_truncated_input(monkeypatch, diagnostic):
+    import media_tool.video as video
+    def packets(*args, on_line, **kwargs):
+        on_line('stream_index=0|pts_time=0|duration_time=N/A')
+        if diagnostic:on_line('stream_index=0|pts_time=1|duration_time=N/A')
+        return diagnostic
+    monkeypatch.setattr(video, 'run_process', packets)
+    with pytest.raises(ValueError):
+        video.packet_durations('synthetic.mp4', {'streams':[{'index':0,'codec_type':'video','duration':None}]}, {'ffprobe':'ffprobe'}, lambda:False)
 
 
 @pytest.mark.parametrize("point", ["created", "progress", "written", "prepared"])

@@ -127,7 +127,9 @@ def packet_durations(path, info, tools, cancelled):
     """Fill missing media durations from per-stream presentation packet spans.
 
     Matroska often has no stream duration; format duration includes other tracks.
-    Keep inspection streaming and reject an unknown last-packet duration.
+    Keep inspection streaming. Some demuxers omit all sample durations; in
+    that case use the observed presentation span as a lower bound, without
+    inventing a final sample duration. Verification retains its frame tolerance.
     """
     missing={s['index'] for s in info['streams']
              if s['codec_type'] in ('video','audio') and s.get('duration') is None}
@@ -158,9 +160,13 @@ def packet_durations(path, info, tools, cancelled):
         value=dict(stream)
         if stream['index'] in missing:
             span=spans.get(stream['index'])
-            if not span or span[2] is None:
+            if not span:
                 raise ValueError('Cannot verify the final media packet duration; output was not committed.')
-            value['duration']=span[2]-span[0]
+            end=span[2] if span[2] is not None else span[1]
+            if end<=span[0]:
+                raise ValueError('Cannot verify the final media packet duration; output was not committed.')
+            value['duration']=end-span[0]
+            value['duration_basis']='packet_end' if span[2] is not None else 'presentation_span_lower_bound'
         streams.append(value)
     return dict(info,streams=streams)
 
@@ -392,7 +398,7 @@ def encode_command(spec, temp, pass_number=0, passlog=None, bitrate=None):
     args += ["-dn", "-map_metadata", "-1", "-map_metadata:s", "-1", "-map_chapters", "-1", "-c:v", codec["encoder"],
         *speed_options, *rate_options, "-pix_fmt", "yuv420p", "-threads:v", str(spec["threads"]),
         # Match the source clock: the default 1/fps clock can collapse VFR timestamps.
-        "-fps_mode", "passthrough", "-enc_time_base:v", "-1"]
+        "-fps_mode", "passthrough", "-enc_time_base:v", "demux"]
     if spec.get("codec") == "hevc":
         # x265 otherwise creates its own auto-sized pool in addition to frame threads.
         args += ["-x265-params", f"pools=none:frame-threads={spec['threads']}:log-level=error"]
@@ -610,7 +616,7 @@ def run_video(store, item, cancelled, progress, hook=lambda point: None):
         verify_webm_header(temp)
     run_process([spec["tools"]["ffmpeg"], "-hide_banner", "-nostdin", "-v", "error", "-xerror", "-nostats",
         "-threads", str(spec["threads"]), "-err_detect", "explode", "-i", str(temp), "-map", "0:v:0", "-map", "0:a?",
-        "-fps_mode:v", "passthrough", "-enc_time_base:v", "-1", "-f", "null", "-"], cancelled, on_line=lambda line: None)
+        "-fps_mode:v", "passthrough", "-enc_time_base:v", "demux", "-f", "null", "-"], cancelled, on_line=lambda line: None)
     progress(95, 100)
     digest = hash_file(temp, cancelled)
     if hash_file(spec["source"], cancelled) != original_hash:

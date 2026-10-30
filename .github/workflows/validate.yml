@@ -5,6 +5,7 @@ permissions:
 jobs:
   test-package:
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
@@ -26,7 +27,11 @@ jobs:
           if (!$binary) { throw 'FFmpeg binary not found' }
           $binary.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - run: python -m pip install -r requirements-dev.txt
-      - run: python -m pytest -q
+      - name: Media tool versions
+        run: |
+          ffmpeg -version
+          ffprobe -version
+      - run: python -m pytest -q --junitxml=artifacts/pytest.xml
         env:
           QT_QPA_PLATFORM: offscreen
       - run: python -m PyInstaller --noconfirm MediaTool.spec
@@ -196,6 +201,7 @@ jobs:
           xvfb-run -a dist/MediaTool/MediaTool --archive-check artifacts/archive-check.json --settings-file artifacts/ci-archive.ini --exit-after-ms 110000
           python -c "import json; from pathlib import Path; assert json.loads(Path('artifacts/archive-check.json').read_text())['passed']"
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: MediaTool-${{ matrix.os }}
           path: |
